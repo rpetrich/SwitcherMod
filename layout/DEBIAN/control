@@ -1,0 +1,9 @@
+Package: switcherclosebuttons
+Priority: optional
+Section: System
+Architecture: iphoneos-arm
+Version: 0.1
+Description: Show close buttons always on the switcher
+Name: Switcher Close Buttons
+Depends: firmware (>= 4.0)
+Author: Ryan Petrich <rpetrich@gmail.com>
