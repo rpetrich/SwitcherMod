@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>SwitcherMod</string>
+	<key>entry</key>
+	<dict>
+		<key>cell</key>
+		<string>PSLinkCell</string>
+		<key>icon</key>
+		<string>/Library/PreferenceLoader/Preferences/SwitcherMod/SwitcherMod.png</string>
+		<key>label</key>
+		<string>SwitcherMod</string>
+	</dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Activation Methods</string>
+			<key>isController</key>
+			<true/>
+			<key>bundle</key>
+			<string>LibActivator</string>
+			<key>activatorListener</key>
+			<string>libactivator.switcher.activate-switcher</string>
+			<key>activatorTitle</key>
+			<string>SwitcherMod</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.rpetrich.switchermod</string>
+			<key>key</key>
+			<string>SMShowActiveApp</string>
+			<key>label</key>
+			<string>Show Active App</string>
+			<key>PostNotification</key>
+			<string>com.rpetrich.switchermod.settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>0</integer>
+			<key>defaults</key>
+			<string>com.rpetrich.switchermod</string>
+			<key>key</key>
+			<string>SMCloseButtonStyle</string>
+			<key>label</key>
+			<string>Close Button Style</string>
+			<key>PostNotification</key>
+			<string>com.rpetrich.switchermod.settingschanged</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>validValues</key>
+			<array>
+				<integer>2</integer>
+				<integer>1</integer>
+				<integer>0</integer>
+			</array>
+			<key>validTitles</key>
+			<array>
+				<string>None</string>
+				<string>Red Minus</string>
+				<string>Black Close</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

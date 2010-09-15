@@ -57,6 +57,24 @@ CHDeclareClass(SBAppIconQuitButton);
 CHDeclareClass(SBApplicationIcon);
 //CHDeclareClass(SBUIController);
 
+static BOOL SMShowActiveApp;
+static NSInteger SMCloseButtonStyle;
+
+enum {
+	SMCloseButtonStyleBlackClose = 0,
+	SMCloseButtonStyleRedMinus = 1,
+	SMCloseButtonStyleNone = 2
+};
+
+static void LoadSettings()
+{
+	CHAutoreleasePoolForScope();
+	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.rpetrich.switchermod.plist"];
+	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
+	SMCloseButtonStyle = [[dict objectForKey:@"SMCloseButtonStyle"] integerValue];
+	[dict release];
+}
+
 static SBIcon *grabbedIcon;
 static NSUInteger grabbedIconIndex;
 static SBApplication *activeApplication;
@@ -96,12 +114,21 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 {
 	CHSuper(0, SBAppSwitcherController, viewWillAppear);
-	//UIImage *image = [UIImage imageNamed:@"SwitcherQuitBox"];
-	// I like the standard closebox, not the stupid little minus
-	UIImage *image = [UIImage imageNamed:@"closebox"];
+	UIImage *image;
+	switch (SMCloseButtonStyle) {
+		case SMCloseButtonStyleBlackClose:
+			image = [UIImage imageNamed:@"closebox"];
+			break;
+		case SMCloseButtonStyleRedMinus:
+			image = [UIImage imageNamed:@"SwitcherQuitBox"];
+			break;
+		default:
+			image = nil;
+			break;
+	}
 	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
-			if ([icon application] == activeApplication)
+			if ((image == nil) || ([icon application] == activeApplication))
 				[icon setCloseBox:nil];
 			else {
 				// Apply my close button always
@@ -219,7 +246,9 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = YES;
 		if (grabbedIconIndex == -1) {
 			ReleaseGrabbedIcon();
-			[self _quitButtonHit:CHIvar(icon, _closeBox, UIView *)];
+			SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
+			[button setAppIcon:(SBApplicationIcon *)icon];
+			[self _quitButtonHit:button];
 		} else {
 			// Animate into position
 			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, icon);
@@ -259,7 +288,7 @@ CHOptimizedMethod(2, self, NSArray *, SBAppSwitcherController, _applicationIcons
 {
 	[activeApplication release];
 	activeApplication = [application copy];
-	return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, nil, forOrientation, orientation);
+	return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, SMShowActiveApp ? nil : application, forOrientation, orientation);
 }
 
 CHConstructor {
@@ -275,5 +304,7 @@ CHConstructor {
 	CHHook(2, SBAppSwitcherController, _applicationIconsExcept, forOrientation);
 	CHLoadLateClass(SBAppIconQuitButton);
 	CHLoadLateClass(SBApplicationIcon);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.rpetrich.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	LoadSettings();
 	//CHLoadLateClass(SBUIController);
 }

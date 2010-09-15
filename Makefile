@@ -1,6 +1,6 @@
-TWEAK_NAME = SwitcherCloseButtons
-SwitcherCloseButtons_OBJC_FILES = SwitcherCloseButtons.m
-SwitcherCloseButtons_FRAMEWORKS = Foundation UIKit
+TWEAK_NAME = SwitcherMod
+SwitcherMod_OBJC_FILES = SwitcherMod.m
+SwitcherMod_FRAMEWORKS = Foundation UIKit
 
 ADDITIONAL_CFLAGS = -std=c99
 

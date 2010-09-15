@@ -1,9 +1,9 @@
-Package: switcherclosebuttons
+Package: com.rpetrich.switchermod
 Priority: optional
 Section: System
 Architecture: iphoneos-arm
 Version: 0.1
-Description: Show close buttons always on the switcher
-Name: Switcher Close Buttons
-Depends: firmware (>= 4.0)
+Description: Customize the multitasking bar
+Name: SwitcherMod
+Depends: firmware (>= 4.0), mobilesubstrate, preferenceloader (>= 2.0), libactivator
 Author: Ryan Petrich <rpetrich@gmail.com>
