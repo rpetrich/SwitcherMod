@@ -59,7 +59,7 @@ CHDeclareClass(SBApplicationIcon);
 
 static SBIcon *grabbedIcon;
 static NSUInteger grabbedIconIndex;
-//static SBApplication *activeApplication;
+static SBApplication *activeApplication;
 
 static void ReleaseGrabbedIcon()
 {
@@ -101,17 +101,21 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 	UIImage *image = [UIImage imageNamed:@"closebox"];
 	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
-			// Apply my close button always
-			SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
-			[button setAppIcon:(SBApplicationIcon *)icon];
-			[button setImage:image forState:0];
-			[button addTarget:self action:@selector(_quitButtonHit:) forControlEvents:UIControlEventTouchUpInside];
-			[button sizeToFit];
-			CGRect frame = button.frame;
-			frame.origin.x -= 10.0f;
-			frame.origin.y -= 10.0f;
-			button.frame = frame;
-			[icon setCloseBox:button];
+			if ([icon application] == activeApplication)
+				[icon setCloseBox:nil];
+			else {
+				// Apply my close button always
+				SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
+				[button setAppIcon:(SBApplicationIcon *)icon];
+				[button setImage:image forState:0];
+				[button addTarget:self action:@selector(_quitButtonHit:) forControlEvents:UIControlEventTouchUpInside];
+				[button sizeToFit];
+				CGRect frame = button.frame;
+				frame.origin.x -= 10.0f;
+				frame.origin.y -= 10.0f;
+				button.frame = frame;
+				[icon setCloseBox:button];
+			}
 		}
 	}
 }
@@ -211,12 +215,12 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, touchEnded, BOOL, ended)
 {
 	//if (CHIvar(self, _editing, BOOL)) {
+		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
+		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = YES;
 		if (grabbedIconIndex == -1) {
 			ReleaseGrabbedIcon();
 			[self _quitButtonHit:CHIvar(icon, _closeBox, UIView *)];
 		} else {
-			SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
-			CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = YES;
 			// Animate into position
 			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, icon);
 			[UIView beginAnimations:nil context:NULL];
@@ -249,14 +253,14 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 	} else {
 		CHSuper(1, SBAppSwitcherController, _quitButtonHit, quitButton);
 	}
-}
+}*/
 
 CHOptimizedMethod(2, self, NSArray *, SBAppSwitcherController, _applicationIconsExcept, SBApplication *, application, forOrientation, UIInterfaceOrientation, orientation)
 {
 	[activeApplication release];
 	activeApplication = [application copy];
 	return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, nil, forOrientation, orientation);
-}*/
+}
 
 CHConstructor {
 	CHLoadLateClass(SBAppSwitcherController);
@@ -268,7 +272,7 @@ CHConstructor {
 	CHHook(2, SBAppSwitcherController, icon, touchMovedWithEvent);
 	CHHook(2, SBAppSwitcherController, icon, touchEnded);
 	//CHHook(1, SBAppSwitcherController, _quitButtonHit);
-	//CHHook(2, SBAppSwitcherController, _applicationIconsExcept, forOrientation);
+	CHHook(2, SBAppSwitcherController, _applicationIconsExcept, forOrientation);
 	CHLoadLateClass(SBAppIconQuitButton);
 	CHLoadLateClass(SBApplicationIcon);
 	//CHLoadLateClass(SBUIController);
