@@ -215,11 +215,11 @@ static CGFloat DistanceSquaredBetweenPoints(CGPoint a, CGPoint b)
 	return (distance.width * distance.width) + (distance.height * distance.height);
 }
 
-static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBIcon *icon)
+static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBApplicationIcon *icon)
 {
 	// Find the destination index based on the current position of the icon
 	CGPoint currentPosition = [icon center];
-	if (currentPosition.y < -20.0f)
+	if ((currentPosition.y < -20.0f) && ([icon application] != activeApplication))
 		return -1;
 	NSUInteger destIndex = 0;
 	CGPoint destPosition = IconPositionForIconIndex(bottomBar, icon, 0);
@@ -241,7 +241,7 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 {
 	//if (CHIvar(self, _editing, BOOL)) {
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
-		NSUInteger destIndex = DestinationIndexForIcon(_bottomBar, icon);
+		NSUInteger destIndex = DestinationIndexForIcon(_bottomBar, (SBApplicationIcon *)icon);
 		if (grabbedIconIndex != destIndex) {
 			grabbedIconIndex = destIndex;
 			// Index has changed, reflow icons to match
@@ -274,7 +274,7 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			[self _quitButtonHit:button];
 		} else {
 			// Animate into position
-			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, icon);
+			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, (SBApplicationIcon *)icon);
 			[UIView beginAnimations:nil context:NULL];
 			[UIView setAnimationBeginsFromCurrentState:YES];
 			[UIView setAnimationDuration:0.33];
