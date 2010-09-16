@@ -62,12 +62,16 @@
 @property (nonatomic, readonly) SBProcess *process;
 @end
 
+@interface SBUIController (OS40)
+- (void)_toggleSwitcher;
+@end
+
 
 CHDeclareClass(SBAppSwitcherController);
 CHDeclareClass(SBAppIconQuitButton);
 CHDeclareClass(SBApplicationIcon);
 CHDeclareClass(SBAppSwitcherBarView);
-//CHDeclareClass(SBUIController);
+CHDeclareClass(SBUIController);
 
 static BOOL SMShowActiveApp;
 static NSInteger SMCloseButtonStyle;
@@ -169,6 +173,14 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 			}
 		}
 	}
+}
+
+CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconTapped, SBApplicationIcon *, icon)
+{
+	if ([icon application] == activeApplication)
+		[CHSharedInstance(SBUIController) _toggleSwitcher];
+	else
+		CHSuper(1, SBAppSwitcherController, iconTapped, icon);
 }
 
 CHOptimizedMethod(1, new, BOOL, SBAppSwitcherController, iconPositionIsEditable, SBIcon *, icon)
@@ -336,6 +348,7 @@ CHConstructor {
 	CHHook(0, SBAppSwitcherController, _beginEditing);
 	CHHook(0, SBAppSwitcherController, _stopEditing);
 	CHHook(0, SBAppSwitcherController, viewWillAppear);
+	CHHook(1, SBAppSwitcherController, iconTapped);
 	CHHook(1, SBAppSwitcherController, iconPositionIsEditable);
 	CHHook(1, SBAppSwitcherController, iconHandleLongPress);
 	CHHook(2, SBAppSwitcherController, icon, touchMovedWithEvent);
@@ -348,5 +361,5 @@ CHConstructor {
 	CHHook(0, SBAppSwitcherBarView, layoutSubviews);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.rpetrich.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	LoadSettings();
-	//CHLoadLateClass(SBUIController);
+	CHLoadLateClass(SBUIController);
 }
