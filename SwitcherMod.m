@@ -49,21 +49,40 @@
 
 @interface SBIcon (OS40)
 - (void)setCloseBox:(UIView *)view;
+- (void)setShadowsHidden:(BOOL)hidden;
+- (UIImageView *)iconImageView;
+@end
+
+@interface SBProcess : NSObject {
+}
+- (BOOL)isRunning;
+@end
+
+@interface SBApplication (OS40)
+@property (nonatomic, readonly) SBProcess *process;
 @end
 
 
 CHDeclareClass(SBAppSwitcherController);
 CHDeclareClass(SBAppIconQuitButton);
 CHDeclareClass(SBApplicationIcon);
+CHDeclareClass(SBAppSwitcherBarView);
 //CHDeclareClass(SBUIController);
 
 static BOOL SMShowActiveApp;
 static NSInteger SMCloseButtonStyle;
+static NSInteger SMExitedAppStyle;
 
 enum {
 	SMCloseButtonStyleBlackClose = 0,
 	SMCloseButtonStyleRedMinus = 1,
 	SMCloseButtonStyleNone = 2
+};
+
+enum {
+	SMExitedAppStyleTransparent = 0,
+	SMExitedAppStyleHidden = 1,
+	SMExitedAppStyleOpaque = 2
 };
 
 static void LoadSettings()
@@ -72,6 +91,7 @@ static void LoadSettings()
 	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.rpetrich.switchermod.plist"];
 	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
 	SMCloseButtonStyle = [[dict objectForKey:@"SMCloseButtonStyle"] integerValue];
+	SMExitedAppStyle = [[dict objectForKey:@"SMExitedAppStyle"] integerValue];
 	[dict release];
 }
 
@@ -128,7 +148,11 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 	}
 	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
-			if ((image == nil) || ([icon application] == activeApplication))
+			SBApplication *application = [icon application];
+			BOOL isRunning = (SMExitedAppStyle == SMExitedAppStyleOpaque) || [[application process] isRunning];
+			[icon iconImageView].alpha = isRunning ? 1.0f : 0.5f;
+			[icon setShadowsHidden:!isRunning];
+			if ((image == nil) || (application == activeApplication))
 				[icon setCloseBox:nil];
 			else {
 				// Apply my close button always
@@ -161,11 +185,10 @@ CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, S
 		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = NO;
 		grabbedIcon = [icon retain];
 		grabbedIconIndex = [[_bottomBar appIcons] indexOfObjectIdenticalTo:icon];
-		[[icon superview] bringSubviewToFront:icon];
+		[icon.superview bringSubviewToFront:icon];
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationBeginsFromCurrentState:YES];
 		[UIView setAnimationDuration:0.33];
-		//[icon setAllowJitter:NO];
 		[icon setIsGrabbed:YES];
 		[UIView commitAnimations];
 	//} else {
@@ -288,7 +311,24 @@ CHOptimizedMethod(2, self, NSArray *, SBAppSwitcherController, _applicationIcons
 {
 	[activeApplication release];
 	activeApplication = [application copy];
-	return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, SMShowActiveApp ? nil : application, forOrientation, orientation);
+	if (SMShowActiveApp)
+		application = nil;
+	if (SMExitedAppStyle == SMExitedAppStyleHidden) {
+		NSMutableArray *newResult = [NSMutableArray array];
+		for (SBApplicationIcon *icon in CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, application, forOrientation, orientation))
+			if ([[[icon application] process] isRunning])
+				[newResult addObject:icon];
+		return newResult;
+	} else {
+		return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, application, forOrientation, orientation);
+	}
+}
+
+CHOptimizedMethod(0, self, void, SBAppSwitcherBarView, layoutSubviews)
+{
+	CHSuper(0, SBAppSwitcherBarView, layoutSubviews);
+	if ([grabbedIcon superview] == self)
+		[grabbedIcon bringSubviewToFront:grabbedIcon];
 }
 
 CHConstructor {
@@ -304,6 +344,8 @@ CHConstructor {
 	CHHook(2, SBAppSwitcherController, _applicationIconsExcept, forOrientation);
 	CHLoadLateClass(SBAppIconQuitButton);
 	CHLoadLateClass(SBApplicationIcon);
+	CHLoadLateClass(SBAppSwitcherBarView);
+	CHHook(0, SBAppSwitcherBarView, layoutSubviews);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.rpetrich.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	LoadSettings();
 	//CHLoadLateClass(SBUIController);
