@@ -1,9 +1,11 @@
-Package: com.rpetrich.switchermod
+Package: com.collab.switchermod
 Priority: optional
-Section: System
+Section: Tweaks
 Architecture: iphoneos-arm
 Version: 0.1
 Description: Customize the multitasking bar
+	Drag to reorder, show close buttons by default, make exited apps transparent, show active app
+	Maintained by Optimo
 Name: SwitcherMod
 Depends: firmware (>= 4.0), mobilesubstrate, preferenceloader (>= 2.0), libactivator
-Author: Ryan Petrich <rpetrich@gmail.com>
+Author: Optimo and rpetrich <switchermod@forios.com>

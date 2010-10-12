@@ -92,7 +92,7 @@ enum {
 static void LoadSettings()
 {
 	CHAutoreleasePoolForScope();
-	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.rpetrich.switchermod.plist"];
+	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.collab.switchermod.plist"];
 	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
 	SMCloseButtonStyle = [[dict objectForKey:@"SMCloseButtonStyle"] integerValue];
 	SMExitedAppStyle = [[dict objectForKey:@"SMExitedAppStyle"] integerValue];
@@ -359,7 +359,7 @@ CHConstructor {
 	CHLoadLateClass(SBApplicationIcon);
 	CHLoadLateClass(SBAppSwitcherBarView);
 	CHHook(0, SBAppSwitcherBarView, layoutSubviews);
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.rpetrich.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.collab.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	LoadSettings();
 	CHLoadLateClass(SBUIController);
 }
