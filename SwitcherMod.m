@@ -53,6 +53,11 @@
 - (UIImageView *)iconImageView;
 @end
 
+@interface SBIcon (OS41)
+- (void)setShowsCloseBox:(BOOL)shows;
+- (void)closeBoxTapped;
+@end
+
 @interface SBProcess : NSObject {
 }
 - (BOOL)isRunning;
@@ -150,16 +155,23 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 			image = nil;
 			break;
 	}
+	
 	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = (SMExitedAppStyle == SMExitedAppStyleOpaque) || [[application process] isRunning];
-			[icon iconImageView].alpha = isRunning ? 1.0f : 0.5f;
+			[icon iconImageView].alpha = isRunning ? 1.0f : 0.35f;
 			[icon setShadowsHidden:!isRunning];
+
 			if ((image == nil) || (application == activeApplication))
-				[icon setCloseBox:nil];
-			else {
-				// Apply my close button always
+			{
+				if([icon respondsToSelector:@selector(setShowsCloseBox:)])
+					[icon setShowsCloseBox:NO];
+				else
+					[icon setCloseBox:nil];
+			}
+			else
+			{
 				SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
 				[button setAppIcon:(SBApplicationIcon *)icon];
 				[button setImage:image forState:0];
@@ -169,7 +181,11 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 				frame.origin.x -= 10.0f;
 				frame.origin.y -= 10.0f;
 				button.frame = frame;
-				[icon setCloseBox:button];
+				if([icon respondsToSelector:@selector(setShowsCloseBox:)])
+					[icon setShowsCloseBox:YES];
+				else
+					[icon setCloseBox:button];
+
 			}
 		}
 	}
@@ -277,13 +293,19 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, touchEnded, BOOL, ended)
 {
 	//if (CHIvar(self, _editing, BOOL)) {
+
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
 		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = YES;
 		if (grabbedIconIndex == -1) {
 			ReleaseGrabbedIcon();
 			SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
 			[button setAppIcon:(SBApplicationIcon *)icon];
-			[self _quitButtonHit:button];
+			if([icon respondsToSelector:@selector(closeBoxTapped)])
+				[icon closeBoxTapped];
+			else
+				[self _quitButtonHit:button];
+			
+			
 		} else {
 			// Animate into position
 			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, (SBApplicationIcon *)icon);
@@ -304,11 +326,14 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
 			for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
 				[_model addToFront:[appIcon application]];
+				
+			[self viewWillAppear];	
 		}
 	//}
 }
 
-/*CHOptimizedMethod(1, self, void, SBAppSwitcherController, _quitButtonHit, SBAppIconQuitButton *, quitButton)
+/*
+//CHOptimizedMethod(1, self, void, SBAppSwitcherController, _quitButtonHit, SBAppIconQuitButton *, quitButton)
 {
 	SBApplication *application = [[quitButton appIcon] application];
 	if (application == activeApplication) {
