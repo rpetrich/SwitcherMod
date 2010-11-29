@@ -25,7 +25,8 @@
 }
 - (NSArray *)appIcons;
 - (void)setEditing:(BOOL)editing;
-- (CGRect)_frameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size;
+- (CGRect)_frameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size; // 4.0/4.1
+- (CGRect)_iconFrameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size; // 4.2
 @end
 
 @interface SBAppIconQuitButton : UIButton {
@@ -227,7 +228,10 @@ CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, S
 static CGPoint IconPositionForIconIndex(SBAppSwitcherBarView *bottomBar, SBIcon *icon, NSUInteger index)
 {
 	// Find the position of an icon
-	CGRect frame = [bottomBar _frameForIndex:index withSize:icon.bounds.size];
+	CGSize size = icon.bounds.size;
+	CGRect frame = [bottomBar respondsToSelector:@selector(_iconFrameForIndex:withSize:)]
+	             ? [bottomBar _iconFrameForIndex:index withSize:size]
+	             : [bottomBar _frameForIndex:index withSize:size];
 	frame.origin.x += frame.size.width * 0.5f;
 	frame.origin.y += frame.size.height * 0.5f;
 	return frame.origin;
