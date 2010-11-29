@@ -128,6 +128,8 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _beginEditing)
 		[icon setIsJittering:YES];
 	CHIvar(self, _editing, BOOL) = YES;
 	[_bottomBar setEditing:NO];*/
+	if (SMCloseButtonStyle == SMCloseButtonStyleNone)
+		CHSuper(0, SBAppSwitcherController, _beginEditing);
 }
 
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
@@ -139,6 +141,8 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
 		[icon setIsJittering:NO];
 	CHIvar(self, _editing, BOOL) = NO;
 	[_bottomBar setEditing:NO];*/
+	if (SMCloseButtonStyle == SMCloseButtonStyleNone)
+		CHSuper(0, SBAppSwitcherController, _stopEditing);
 }
 
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
@@ -208,6 +212,8 @@ CHOptimizedMethod(1, new, BOOL, SBAppSwitcherController, iconPositionIsEditable,
 CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, SBIcon *, icon)
 {
 	ReleaseGrabbedIcon();
+	if (SMCloseButtonStyle == SMCloseButtonStyleNone)
+		CHSuper(1, SBAppSwitcherController, iconHandleLongPress, icon);
 	//if (CHIvar(self, _editing, BOOL)) {
 		// Enter "grabbed mode"
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
@@ -338,7 +344,8 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 					[_model addToFront:[appIcon application]];
 			}
 				
-			[self viewWillAppear];	
+			if (SMCloseButtonStyle != SMCloseButtonStyleNone)
+				[self viewWillAppear];	
 		}
 	//}
 }
