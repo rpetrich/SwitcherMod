@@ -328,8 +328,15 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			}
 			// Update priority list in the switcher model
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
-			for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
-				[_model addToFront:[appIcon application]];
+			if (kCFCoreFoundationVersionNumber >= 550.52) {
+				// 4.2+
+				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
+					[_model addToFront:[[appIcon application] displayIdentifier]];
+			} else {
+				// 4.0/4.1
+				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
+					[_model addToFront:[appIcon application]];
+			}
 				
 			[self viewWillAppear];	
 		}
