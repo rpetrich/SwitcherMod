@@ -21,11 +21,13 @@
 - (void)_removeApplicationFromRecents:(SBApplication *)application;
 @end
 
+
 @interface SBAppSwitcherBarView : UIView {
 }
 - (NSArray *)appIcons;
 - (void)setEditing:(BOOL)editing;
-- (CGRect)_frameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size;
+- (CGRect)_frameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size; // 4.0/4.1
+- (CGRect)_iconFrameForIndex:(NSUInteger)iconIndex withSize:(CGSize)size; // 4.2
 @end
 
 @interface SBAppIconQuitButton : UIButton {
@@ -78,9 +80,13 @@ CHDeclareClass(SBApplicationIcon);
 CHDeclareClass(SBAppSwitcherBarView);
 CHDeclareClass(SBUIController);
 
-static BOOL SMShowActiveApp;
-static NSInteger SMCloseButtonStyle;
-static NSInteger SMExitedAppStyle;
+static BOOL SMShowActiveApp = NO;
+static BOOL SMFastIconGrabbing = NO;
+static BOOL SMDragUpToQuit = NO;
+static BOOL SMWiggleModeOff = YES;
+static float SMExitedIconAlpha = 0.5f;
+static NSInteger SMCloseButtonStyle = 0;
+static NSInteger SMExitedAppStyle = 2;
 
 enum {
 	SMCloseButtonStyleBlackClose = 0,
@@ -98,9 +104,17 @@ static void LoadSettings()
 {
 	CHAutoreleasePoolForScope();
 	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.collab.switchermod.plist"];
+	SMFastIconGrabbing = [[dict objectForKey:@"SMFastIconGrabbing"] boolValue];
 	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
+	SMExitedIconAlpha = [[dict objectForKey:@"SMExitedIconAlpha"] floatValue];
+	if(!SMExitedIconAlpha) SMExitedIconAlpha = 0.5f;
+	SMDragUpToQuit = [[dict objectForKey:@"SMDragUpToQuit"] boolValue];
 	SMCloseButtonStyle = [[dict objectForKey:@"SMCloseButtonStyle"] integerValue];
 	SMExitedAppStyle = [[dict objectForKey:@"SMExitedAppStyle"] integerValue];
+	if(SMExitedAppStyle == 0) SMExitedAppStyle = SMExitedAppStyleOpaque;
+	if([dict objectForKey:@"SMWiggleModeOff"] != nil) SMWiggleModeOff = [[dict objectForKey:@"SMWiggleModeOff"] boolValue];
+		
+	
 	[dict release];
 }
 
@@ -127,6 +141,11 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _beginEditing)
 		[icon setIsJittering:YES];
 	CHIvar(self, _editing, BOOL) = YES;
 	[_bottomBar setEditing:NO];*/
+	if (!SMWiggleModeOff)
+		CHSuper(0, SBAppSwitcherController, _beginEditing);
+
+	[self viewWillAppear];	
+		
 }
 
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
@@ -138,7 +157,32 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
 		[icon setIsJittering:NO];
 	CHIvar(self, _editing, BOOL) = NO;
 	[_bottomBar setEditing:NO];*/
+	if (!SMWiggleModeOff)
+		CHSuper(0, SBAppSwitcherController, _stopEditing);
+	
+	[self viewWillAppear];	
 }
+
+
+CHOptimizedMethod(1, self, NSUInteger, SBAppSwitcherController, closeBoxTypeForIcon, SBApplicationIcon *, icon)
+{
+	switch (SMCloseButtonStyle) {
+		case SMCloseButtonStyleNone:
+			return 2;
+			break;
+		case SMCloseButtonStyleBlackClose:
+			return 0;
+			break;
+		case SMCloseButtonStyleRedMinus:
+			return 1;
+			break;
+		default:
+			return 1;
+			break;
+	}
+	
+}
+
 
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 {
@@ -159,8 +203,8 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
 			SBApplication *application = [icon application];
-			BOOL isRunning = (SMExitedAppStyle == SMExitedAppStyleOpaque) || [[application process] isRunning];
-			[icon iconImageView].alpha = isRunning ? 1.0f : 0.35f;
+			BOOL isRunning = [[application process] isRunning];
+			[icon iconImageView].alpha = isRunning ?  1.0f : SMExitedIconAlpha;
 			[icon setShadowsHidden:!isRunning];
 
 			if ((image == nil) || (application == activeApplication))
@@ -182,7 +226,10 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 				frame.origin.y -= 10.0f;
 				button.frame = frame;
 				if([icon respondsToSelector:@selector(setShowsCloseBox:)])
+				{
+//					[icon setShowsCloseBox:NO];
 					[icon setShowsCloseBox:YES];
+				}
 				else
 					[icon setCloseBox:button];
 
@@ -201,12 +248,17 @@ CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconTapped, SBApplicat
 
 CHOptimizedMethod(1, new, BOOL, SBAppSwitcherController, iconPositionIsEditable, SBIcon *, icon)
 {
-	return CHIvar(self, _editing, BOOL);
+	//return CHIvar(self, _editing, BOOL);
+
+	return SMFastIconGrabbing && CHIvar(self, _editing, BOOL);
+
 }
 
 CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, SBIcon *, icon)
 {
 	ReleaseGrabbedIcon();
+	if (!SMWiggleModeOff)
+		CHSuper(1, SBAppSwitcherController, iconHandleLongPress, icon);
 	//if (CHIvar(self, _editing, BOOL)) {
 		// Enter "grabbed mode"
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
@@ -227,7 +279,10 @@ CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, S
 static CGPoint IconPositionForIconIndex(SBAppSwitcherBarView *bottomBar, SBIcon *icon, NSUInteger index)
 {
 	// Find the position of an icon
-	CGRect frame = [bottomBar _frameForIndex:index withSize:icon.bounds.size];
+	CGSize size = icon.bounds.size;
+	CGRect frame = [bottomBar respondsToSelector:@selector(_iconFrameForIndex:withSize:)]
+	             ? [bottomBar _iconFrameForIndex:index withSize:size]
+	             : [bottomBar _frameForIndex:index withSize:size];
 	frame.origin.x += frame.size.width * 0.5f;
 	frame.origin.y += frame.size.height * 0.5f;
 	return frame.origin;
@@ -247,7 +302,7 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 {
 	// Find the destination index based on the current position of the icon
 	CGPoint currentPosition = [icon center];
-	if ((currentPosition.y < -20.0f) && ([icon application] != activeApplication))
+	if (((currentPosition.y < -20.0f) && (SMDragUpToQuit)) && ([icon application] != activeApplication))
 		return -1;
 	NSUInteger destIndex = 0;
 	CGPoint destPosition = IconPositionForIconIndex(bottomBar, icon, 0);
@@ -305,7 +360,6 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			else
 				[self _quitButtonHit:button];
 			
-			
 		} else {
 			// Animate into position
 			NSUInteger destinationIndex = DestinationIndexForIcon(_bottomBar, (SBApplicationIcon *)icon);
@@ -324,10 +378,18 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			}
 			// Update priority list in the switcher model
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
-			for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
-				[_model addToFront:[appIcon application]];
+			if (kCFCoreFoundationVersionNumber >= 550.52) {
+				// 4.2+
+				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
+					[_model addToFront:[[appIcon application] displayIdentifier]];
+			} else {
+				// 4.0/4.1
+				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
+					[_model addToFront:[appIcon application]];
+			}
 				
-			[self viewWillAppear];	
+			if (!SMWiggleModeOff)
+				[self viewWillAppear];	
 		}
 	//}
 }
@@ -373,6 +435,7 @@ CHConstructor {
 	CHHook(0, SBAppSwitcherController, _beginEditing);
 	CHHook(0, SBAppSwitcherController, _stopEditing);
 	CHHook(0, SBAppSwitcherController, viewWillAppear);
+	CHHook(1, SBAppSwitcherController, closeBoxTypeForIcon);
 	CHHook(1, SBAppSwitcherController, iconTapped);
 	CHHook(1, SBAppSwitcherController, iconPositionIsEditable);
 	CHHook(1, SBAppSwitcherController, iconHandleLongPress);

@@ -17,33 +17,15 @@
 	<array>
 		<dict>
 			<key>cell</key>
-			<string>PSGroupCell</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>label</key>
-			<string>Activation Methods</string>
-			<key>isController</key>
-			<true/>
-			<key>bundle</key>
-			<string>LibActivator</string>
-			<key>activatorListener</key>
-			<string>libactivator.switcher.activate-switcher</string>
-			<key>activatorTitle</key>
-			<string>SwitcherMod</string>
-		</dict>
-		<dict>
-			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<true/>
+			<false/>
 			<key>defaults</key>
 			<string>com.collab.switchermod</string>
 			<key>key</key>
 			<string>SMShowActiveApp</string>
 			<key>label</key>
-			<string>Show Active App</string>
+			<string>Show Current App</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
 		</dict>
@@ -57,7 +39,7 @@
 			<key>key</key>
 			<string>SMCloseButtonStyle</string>
 			<key>label</key>
-			<string>Close Button Style</string>
+			<string>Close Box Style</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
 			<key>detail</key>
@@ -66,43 +48,110 @@
 			<array>
 				<integer>2</integer>
 				<integer>1</integer>
-				<integer>0</integer>
-			</array>
-			<key>validTitles</key>
-			<array>
-				<string>None</string>
-				<string>Red Minus</string>
-				<string>Black Close</string>
-			</array>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>default</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>com.collab.switchermod</string>
-			<key>key</key>
-			<string>SMExitedAppStyle</string>
-			<key>label</key>
-			<string>Exited App Style</string>
-			<key>PostNotification</key>
-			<string>com.collab.switchermod.settingschanged</string>
-			<key>detail</key>
-			<string>PSListItemsController</string>
-			<key>validValues</key>
-			<array>
-				<integer>1</integer>
-				<integer>2</integer>
 				<integer>0</integer>
 			</array>
 			<key>validTitles</key>
 			<array>
 				<string>Hidden</string>
-				<string>Opaque</string>
-				<string>Transparent</string>
+				<string>Red Minus</string>
+				<string>Black 'X'</string>
 			</array>
 		</dict>
-	</array>
+        <dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>negate</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.collab.switchermod</string>
+			<key>key</key>
+			<string>SMWiggleModeOff</string>
+			<key>label</key>
+			<string>Wiggle Mode</string>
+			<key>PostNotification</key>
+			<string>com.collab.switchermod.settingschanged</string>
+		</dict>
+        <dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.collab.switchermod</string>
+			<key>key</key>
+			<string>SMFastIconGrabbing</string>
+			<key>label</key>
+			<string>Wiggle Fast Grabbing</string>
+			<key>PostNotification</key>
+			<string>com.collab.switchermod.settingschanged</string>
+		</dict>
+        <dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.collab.switchermod</string>
+			<key>key</key>
+			<string>SMDragUpToQuit</string>
+			<key>label</key>
+			<string>Drag Up To Quit</string>
+			<key>PostNotification</key>
+			<string>com.collab.switchermod.settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>2</integer>
+			<key>defaults</key>
+			<string>com.collab.switchermod</string>
+			<key>key</key>
+			<string>SMExitedAppStyle</string>
+			<key>label</key>
+			<string>Recent App Icons</string>
+			<key>PostNotification</key>
+			<string>com.collab.switchermod.settingschanged</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>validValues</key>
+			<array>
+				<integer>2</integer>
+				<integer>1</integer>
+			</array>
+			<key>validTitles</key>
+			<array>
+				<string>Normal</string>
+				<string>Remove</string>
+			</array>
+		</dict>
+         <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>label</key>
+            <string>Inactive Recent Icons Alpha %</string>
+        </dict>
+       <dict>
+            <key>cell</key>
+            <string>PSSliderCell</string>
+            <key>default</key>
+            <real>0.5</real>
+            <key>min</key>
+            <real>0.1</real>
+            <key>max</key>
+            <real>1.0</real>
+            <key>showValue</key>
+            <true/>
+            <key>key</key>
+            <string>SMExitedIconAlpha</string>
+            <key>defaults</key>
+            <string>com.collab.switchermod</string>
+            <key>PostNotification</key>
+            <string>com.collab.switchermod.settingschanged</string>
+        </dict>        
+
+    </array>
 </dict>
 </plist>
