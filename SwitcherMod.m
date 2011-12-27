@@ -183,6 +183,10 @@ CHOptimizedMethod(1, self, NSUInteger, SBAppSwitcherController, closeBoxTypeForI
 	
 }
 
+static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
+{
+	return [view respondsToSelector:@selector(appIcons)] ? [view appIcons] : CHIvar(view, _appIcons, NSMutableArray *);
+}
 
 CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 {
@@ -200,7 +204,7 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 			break;
 	}
 	
-	for (SBApplicationIcon *icon in [CHIvar(self, _bottomBar, SBAppSwitcherBarView *) appIcons]) {
+	for (SBApplicationIcon *icon in IconsForSwitcherBar(CHIvar(self, _bottomBar, SBAppSwitcherBarView *))) {
 		if (CHIsClass(icon, SBApplicationIcon)) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = [[application process] isRunning];
@@ -264,7 +268,7 @@ CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, S
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
 		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = NO;
 		grabbedIcon = [icon retain];
-		grabbedIconIndex = [[_bottomBar appIcons] indexOfObjectIdenticalTo:icon];
+		grabbedIconIndex = [IconsForSwitcherBar(_bottomBar) indexOfObjectIdenticalTo:icon];
 		[icon.superview bringSubviewToFront:icon];
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationBeginsFromCurrentState:YES];
@@ -307,7 +311,7 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 	NSUInteger destIndex = 0;
 	CGPoint destPosition = IconPositionForIconIndex(bottomBar, icon, 0);
 	CGFloat distanceSquared = DistanceSquaredBetweenPoints(currentPosition, destPosition);
-	NSUInteger count = [[bottomBar appIcons] count];
+	NSUInteger count = [IconsForSwitcherBar(bottomBar) count];
 	for (NSUInteger i = 1; i < count; i++) {
 		CGPoint proposedPosition = IconPositionForIconIndex(bottomBar, icon, i);
 		CGFloat proposedDistanceSquared = DistanceSquaredBetweenPoints(currentPosition, proposedPosition);
@@ -332,7 +336,7 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 			[UIView setAnimationBeginsFromCurrentState:YES];
 			[UIView setAnimationDuration:0.33];
 			NSUInteger i = 0;
-			for (SBIcon *appIcon in [_bottomBar appIcons]) {
+			for (SBIcon *appIcon in IconsForSwitcherBar(_bottomBar)) {
 				if (appIcon != icon) {
 					if (i == destIndex)
 						i++;
