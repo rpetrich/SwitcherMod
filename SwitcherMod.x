@@ -199,38 +199,40 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 			break;
 	}
 	
-	for (SBApplicationIcon *icon in IconsForSwitcherBar(CHIvar(self, _bottomBar, SBAppSwitcherBarView *))) {
+	for (id iconView in IconsForSwitcherBar(CHIvar(self, _bottomBar, SBAppSwitcherBarView *))) {
+		SBApplicationIcon *icon = [iconView respondsToSelector:@selector(icon)] ? [iconView icon] : iconView;
 		if ([icon isKindOfClass:%c(SBApplicationIcon)]) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = [[application process] isRunning];
-			[icon iconImageView].alpha = isRunning ?  1.0f : SMExitedIconAlpha;
-			[icon setShadowsHidden:!isRunning];
+			[[iconView iconImageView] setAlpha:isRunning ? 1.0f : SMExitedIconAlpha];
+			[iconView setShadowsHidden:!isRunning];
 
 			if ((image == nil) || (application == activeApplication))
 			{
-				if([icon respondsToSelector:@selector(setShowsCloseBox:)])
-					[icon setShowsCloseBox:NO];
+				if([iconView respondsToSelector:@selector(setShowsCloseBox:)])
+					[iconView setShowsCloseBox:NO];
 				else
-					[icon setCloseBox:nil];
+					[iconView setCloseBox:nil];
 			}
 			else
 			{
-				SBAppIconQuitButton *button = [%c(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
-				[button setAppIcon:(SBApplicationIcon *)icon];
-				[button setImage:image forState:0];
-				[button addTarget:self action:@selector(_quitButtonHit:) forControlEvents:UIControlEventTouchUpInside];
-				[button sizeToFit];
-				CGRect frame = button.frame;
-				frame.origin.x -= 10.0f;
-				frame.origin.y -= 10.0f;
-				button.frame = frame;
-				if([icon respondsToSelector:@selector(setShowsCloseBox:)])
+				if([iconView respondsToSelector:@selector(setShowsCloseBox:)])
 				{
 //					[icon setShowsCloseBox:NO];
-					[icon setShowsCloseBox:YES];
+					[iconView setShowsCloseBox:YES];
 				}
-				else
-					[icon setCloseBox:button];
+				else {
+					SBAppIconQuitButton *button = [%c(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
+					[button setAppIcon:(SBApplicationIcon *)icon];
+					[button setImage:image forState:0];
+					[button addTarget:self action:@selector(_quitButtonHit:) forControlEvents:UIControlEventTouchUpInside];
+					[button sizeToFit];
+					CGRect frame = button.frame;
+					frame.origin.x -= 10.0f;
+					frame.origin.y -= 10.0f;
+					button.frame = frame;
+					[iconView setCloseBox:button];
+				}
 
 			}
 		}
