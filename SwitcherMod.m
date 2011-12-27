@@ -1,6 +1,8 @@
 #import <SpringBoard/SpringBoard.h>
 #import <CaptainHook/CaptainHook.h>
 
+%config(generator=internal)
+
 @class SBAppSwitcherModel, SBNowPlayingBar, SBAppSwitcherBarView;
 
 @interface SBAppSwitcherController : NSObject {
@@ -74,12 +76,6 @@
 @end
 
 
-CHDeclareClass(SBAppSwitcherController);
-CHDeclareClass(SBAppIconQuitButton);
-CHDeclareClass(SBApplicationIcon);
-CHDeclareClass(SBAppSwitcherBarView);
-CHDeclareClass(SBUIController);
-
 static BOOL SMShowActiveApp = NO;
 static BOOL SMFastIconGrabbing = NO;
 static BOOL SMDragUpToQuit = NO;
@@ -102,7 +98,6 @@ enum {
 
 static void LoadSettings()
 {
-	CHAutoreleasePoolForScope();
 	NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.collab.switchermod.plist"];
 	SMFastIconGrabbing = [[dict objectForKey:@"SMFastIconGrabbing"] boolValue];
 	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
@@ -133,7 +128,9 @@ static void ReleaseGrabbedIcon()
 	}
 }
 
-CHOptimizedMethod(0, self, void, SBAppSwitcherController, _beginEditing)
+%hook SBAppSwitcherController
+
+- (void)_beginEditing
 {
 	// Reimplement the standard _beginEditing, but don't add the close buttons
 	/*SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
@@ -142,13 +139,12 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _beginEditing)
 	CHIvar(self, _editing, BOOL) = YES;
 	[_bottomBar setEditing:NO];*/
 	if (!SMWiggleModeOff)
-		CHSuper(0, SBAppSwitcherController, _beginEditing);
+		%orig;
 
 	[self viewWillAppear];	
-		
 }
 
-CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
+- (void)_stopEditing
 {
 	/*ReleaseGrabbedIcon();
 	// Reimplement the standard _stopEditing, but don't remove the close buttons
@@ -158,13 +154,12 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, _stopEditing)
 	CHIvar(self, _editing, BOOL) = NO;
 	[_bottomBar setEditing:NO];*/
 	if (!SMWiggleModeOff)
-		CHSuper(0, SBAppSwitcherController, _stopEditing);
+		%orig;
 	
 	[self viewWillAppear];	
 }
 
-
-CHOptimizedMethod(1, self, NSUInteger, SBAppSwitcherController, closeBoxTypeForIcon, SBApplicationIcon *, icon)
+- (NSUInteger)closeBoxTypeForIcon:(SBApplicationIcon *)icon
 {
 	switch (SMCloseButtonStyle) {
 		case SMCloseButtonStyleNone:
@@ -188,9 +183,9 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 	return [view respondsToSelector:@selector(appIcons)] ? [view appIcons] : CHIvar(view, _appIcons, NSMutableArray *);
 }
 
-CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
+- (void)viewWillAppear
 {
-	CHSuper(0, SBAppSwitcherController, viewWillAppear);
+	%orig;
 	UIImage *image;
 	switch (SMCloseButtonStyle) {
 		case SMCloseButtonStyleBlackClose:
@@ -205,7 +200,7 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 	}
 	
 	for (SBApplicationIcon *icon in IconsForSwitcherBar(CHIvar(self, _bottomBar, SBAppSwitcherBarView *))) {
-		if (CHIsClass(icon, SBApplicationIcon)) {
+		if ([icon isKindOfClass:%c(SBApplicationIcon)]) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = [[application process] isRunning];
 			[icon iconImageView].alpha = isRunning ?  1.0f : SMExitedIconAlpha;
@@ -220,7 +215,7 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 			}
 			else
 			{
-				SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
+				SBAppIconQuitButton *button = [%c(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
 				[button setAppIcon:(SBApplicationIcon *)icon];
 				[button setImage:image forState:0];
 				[button addTarget:self action:@selector(_quitButtonHit:) forControlEvents:UIControlEventTouchUpInside];
@@ -242,27 +237,25 @@ CHOptimizedMethod(0, self, void, SBAppSwitcherController, viewWillAppear)
 	}
 }
 
-CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconTapped, SBApplicationIcon *, icon)
+- (void)iconTapped:(SBApplicationIcon *)icon
 {
 	if ([icon application] == activeApplication)
-		[CHSharedInstance(SBUIController) _toggleSwitcher];
+		[[%c(SBUIController) sharedInstance] _toggleSwitcher];
 	else
-		CHSuper(1, SBAppSwitcherController, iconTapped, icon);
+		%orig;
 }
 
-CHOptimizedMethod(1, new, BOOL, SBAppSwitcherController, iconPositionIsEditable, SBIcon *, icon)
+%new
+- (BOOL)iconPositionIsEditable:(SBIcon *)icon
 {
-	//return CHIvar(self, _editing, BOOL);
-
 	return SMFastIconGrabbing && CHIvar(self, _editing, BOOL);
-
 }
 
-CHOptimizedMethod(1, self, void, SBAppSwitcherController, iconHandleLongPress, SBIcon *, icon)
+- (void)iconHandleLongPress:(SBIcon *)icon
 {
 	ReleaseGrabbedIcon();
 	if (!SMWiggleModeOff)
-		CHSuper(1, SBAppSwitcherController, iconHandleLongPress, icon);
+		%orig;
 	//if (CHIvar(self, _editing, BOOL)) {
 		// Enter "grabbed mode"
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
@@ -324,7 +317,8 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 	return destIndex;
 }
 
-CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, touchMovedWithEvent, UIEvent *, event)
+%new
+- (void)icon:(SBIcon *)icon touchMovedWithEvent:(UIEvent *)event
 {
 	//if (CHIvar(self, _editing, BOOL)) {
 		SBAppSwitcherBarView *_bottomBar = CHIvar(self, _bottomBar, SBAppSwitcherBarView *);
@@ -349,7 +343,8 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 	//}
 }
 
-CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, touchEnded, BOOL, ended)
+%new
+- (void)icon:(SBIcon *)icon touchEnded:(BOOL)ended
 {
 	//if (CHIvar(self, _editing, BOOL)) {
 
@@ -357,7 +352,7 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 		CHIvar(_bottomBar, _scrollView, UIScrollView *).scrollEnabled = YES;
 		if (grabbedIconIndex == -1) {
 			ReleaseGrabbedIcon();
-			SBAppIconQuitButton *button = [CHClass(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
+			SBAppIconQuitButton *button = [%c(SBAppIconQuitButton) buttonWithType:UIButtonTypeCustom];
 			[button setAppIcon:(SBApplicationIcon *)icon];
 			if([icon respondsToSelector:@selector(closeBoxTapped)])
 				[icon closeBoxTapped];
@@ -410,7 +405,7 @@ CHOptimizedMethod(2, new, void, SBAppSwitcherController, icon, SBIcon *, icon, t
 	}
 }*/
 
-CHOptimizedMethod(2, self, NSArray *, SBAppSwitcherController, _applicationIconsExcept, SBApplication *, application, forOrientation, UIInterfaceOrientation, orientation)
+- (NSArray *)_applicationIconsExcept:(SBApplication *)application forOrientation:(UIInterfaceOrientation)orientation
 {
 	[activeApplication release];
 	activeApplication = [application copy];
@@ -418,40 +413,33 @@ CHOptimizedMethod(2, self, NSArray *, SBAppSwitcherController, _applicationIcons
 		application = nil;
 	if (SMExitedAppStyle == SMExitedAppStyleHidden) {
 		NSMutableArray *newResult = [NSMutableArray array];
-		for (SBApplicationIcon *icon in CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, application, forOrientation, orientation))
+		for (SBApplicationIcon *icon in %orig)
 			if ([[[icon application] process] isRunning])
 				[newResult addObject:icon];
 		return newResult;
 	} else {
-		return CHSuper(2, SBAppSwitcherController, _applicationIconsExcept, application, forOrientation, orientation);
+		return %orig;
 	}
 }
 
-CHOptimizedMethod(0, self, void, SBAppSwitcherBarView, layoutSubviews)
+%end
+
+%hook SBAppSwitcherBarView
+
+- (void)layoutSubviews
 {
-	CHSuper(0, SBAppSwitcherBarView, layoutSubviews);
+	%orig;
 	if ([grabbedIcon superview] == self)
 		[grabbedIcon bringSubviewToFront:grabbedIcon];
 }
 
-CHConstructor {
-	CHLoadLateClass(SBAppSwitcherController);
-	CHHook(0, SBAppSwitcherController, _beginEditing);
-	CHHook(0, SBAppSwitcherController, _stopEditing);
-	CHHook(0, SBAppSwitcherController, viewWillAppear);
-	CHHook(1, SBAppSwitcherController, closeBoxTypeForIcon);
-	CHHook(1, SBAppSwitcherController, iconTapped);
-	CHHook(1, SBAppSwitcherController, iconPositionIsEditable);
-	CHHook(1, SBAppSwitcherController, iconHandleLongPress);
-	CHHook(2, SBAppSwitcherController, icon, touchMovedWithEvent);
-	CHHook(2, SBAppSwitcherController, icon, touchEnded);
-	//CHHook(1, SBAppSwitcherController, _quitButtonHit);
-	CHHook(2, SBAppSwitcherController, _applicationIconsExcept, forOrientation);
-	CHLoadLateClass(SBAppIconQuitButton);
-	CHLoadLateClass(SBApplicationIcon);
-	CHLoadLateClass(SBAppSwitcherBarView);
-	CHHook(0, SBAppSwitcherBarView, layoutSubviews);
+%end
+
+%ctor
+{
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	%init;
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.collab.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	LoadSettings();
-	CHLoadLateClass(SBUIController);
+	[pool drain];
 }

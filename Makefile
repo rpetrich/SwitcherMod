@@ -1,5 +1,5 @@
 TWEAK_NAME = SwitcherMod
-SwitcherMod_OBJC_FILES = SwitcherMod.m
+SwitcherMod_FILES = SwitcherMod.x
 SwitcherMod_FRAMEWORKS = Foundation UIKit
 
 ADDITIONAL_CFLAGS = -std=c99
