@@ -128,6 +128,11 @@ static void ReleaseGrabbedIcon()
 	}
 }
 
+static id IconForIconView(id iconView)
+{
+	return [iconView respondsToSelector:@selector(icon)] ? [iconView icon] : iconView;
+}
+
 %hook SBAppSwitcherController
 
 - (void)_beginEditing
@@ -200,7 +205,7 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 	}
 	
 	for (id iconView in IconsForSwitcherBar(CHIvar(self, _bottomBar, SBAppSwitcherBarView *))) {
-		SBApplicationIcon *icon = [iconView respondsToSelector:@selector(icon)] ? [iconView icon] : iconView;
+		SBApplicationIcon *icon = IconForIconView(iconView);
 		if ([icon isKindOfClass:%c(SBApplicationIcon)]) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = [[application process] isRunning];
@@ -241,7 +246,7 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 
 - (void)iconTapped:(id)icon
 {
-	id appIcon = [icon respondsToSelector:@selector(icon)] ? [icon icon] : icon;
+	SBApplicationIcon *appIcon = IconForIconView(icon);
 	if ([appIcon application] == activeApplication)
 		[[%c(SBUIController) sharedInstance] _toggleSwitcher];
 	else
@@ -302,7 +307,7 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 {
 	// Find the destination index based on the current position of the icon
 	CGPoint currentPosition = [icon center];
-	if (((currentPosition.y < -20.0f) && (SMDragUpToQuit)) && ([icon application] != activeApplication))
+	if (((currentPosition.y < -20.0f) && (SMDragUpToQuit)) && ([IconForIconView(icon) application] != activeApplication))
 		return -1;
 	NSUInteger destIndex = 0;
 	CGPoint destPosition = IconPositionForIconIndex(bottomBar, icon, 0);
@@ -380,7 +385,11 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 			}
 			// Update priority list in the switcher model
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
-			if (kCFCoreFoundationVersionNumber >= 550.52) {
+			if (kCFCoreFoundationVersionNumber >= 675.00) {
+				// 5.0+
+				for (id iconView in [_appIcons reverseObjectEnumerator])
+					[_model addToFront:[[(SBApplicationIcon *)[iconView icon] application] displayIdentifier]];
+			} else if (kCFCoreFoundationVersionNumber >= 550.52) {
 				// 4.2+
 				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
 					[_model addToFront:[[appIcon application] displayIdentifier]];
