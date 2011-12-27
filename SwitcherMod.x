@@ -237,9 +237,10 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 	}
 }
 
-- (void)iconTapped:(SBApplicationIcon *)icon
+- (void)iconTapped:(id)icon
 {
-	if ([icon application] == activeApplication)
+	id appIcon = [icon respondsToSelector:@selector(icon)] ? [icon icon] : icon;
+	if ([appIcon application] == activeApplication)
 		[[%c(SBUIController) sharedInstance] _toggleSwitcher];
 	else
 		%orig;
