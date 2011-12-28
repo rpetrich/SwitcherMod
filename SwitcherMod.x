@@ -23,7 +23,6 @@
 - (void)_removeApplicationFromRecents:(SBApplication *)application;
 @end
 
-
 @interface SBAppSwitcherBarView : UIView {
 }
 - (NSArray *)appIcons;
@@ -247,7 +246,8 @@ static BOOL SMShowActiveApp = NO;
 static BOOL SMFastIconGrabbing = NO;
 static BOOL SMDragUpToQuit = NO;
 static BOOL SMWiggleModeOff = YES;
-static float SMExitedIconAlpha = 0.5f;
+static BOOL SMIconLabelsOff = NO;
+static float SMExitedIconAlpha = 50.0f;
 static NSInteger SMCloseButtonStyle = 0;
 static NSInteger SMExitedAppStyle = 2;
 
@@ -269,13 +269,13 @@ static void LoadSettings()
 	SMFastIconGrabbing = [[dict objectForKey:@"SMFastIconGrabbing"] boolValue];
 	SMShowActiveApp = [[dict objectForKey:@"SMShowActiveApp"] boolValue];
 	SMExitedIconAlpha = [[dict objectForKey:@"SMExitedIconAlpha"] floatValue];
-	if(!SMExitedIconAlpha) SMExitedIconAlpha = 0.5f;
+	if(!SMExitedIconAlpha) SMExitedIconAlpha = 50.0f;
 	SMDragUpToQuit = [[dict objectForKey:@"SMDragUpToQuit"] boolValue];
 	SMCloseButtonStyle = [[dict objectForKey:@"SMCloseButtonStyle"] integerValue];
 	SMExitedAppStyle = [[dict objectForKey:@"SMExitedAppStyle"] integerValue];
 	if(SMExitedAppStyle == 0) SMExitedAppStyle = SMExitedAppStyleOpaque;
 	if([dict objectForKey:@"SMWiggleModeOff"] != nil) SMWiggleModeOff = [[dict objectForKey:@"SMWiggleModeOff"] boolValue];
-		
+	if([dict objectForKey:@"SMIconLabelsOff"] != nil) SMIconLabelsOff = [[dict objectForKey:@"SMIconLabelsOff"] boolValue];
 	
 	[dict release];
 }
@@ -376,9 +376,13 @@ static NSArray *IconsForSwitcherBar(SBAppSwitcherBarView *view)
 		if ([icon isKindOfClass:%c(SBApplicationIcon)]) {
 			SBApplication *application = [icon application];
 			BOOL isRunning = [[application process] isRunning];
-			[[iconView iconImageView] setAlpha:isRunning ? 1.0f : SMExitedIconAlpha];
+			[iconView iconImageView].alpha = isRunning ?  1.0f : (SMExitedIconAlpha / 100);
 			[iconView setShadowsHidden:!isRunning];
-
+		
+			SBIconLabel *label = CHIvar(iconView, _label, SBIconLabel *);
+			[label setAlpha:(SMIconLabelsOff) ? 0.0f : 1.0f];
+//			[icon setDrawsLabel:(SMIconLabelsOff) ? NO : YES];
+					
 			if ((image == nil) || (application == activeApplication))
 			{
 				if([iconView respondsToSelector:@selector(setShowsCloseBox:)])
