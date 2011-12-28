@@ -153,7 +153,7 @@
 - (id)reflectedIconWithBrightness:(float)brightness;
 - (void)setIconImageAlpha:(float)alpha;
 - (void)setIconLabelAlpha:(float)alpha;
-- (id)iconImageView;
+- (SBIconImageView *)iconImageView;
 - (void)setLabelHidden:(BOOL)hidden;
 - (void)positionLabel;
 - (CGSize)_labelSize;
