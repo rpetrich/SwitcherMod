@@ -2,7 +2,7 @@ Package: com.collab.switchermod
 Priority: optional
 Section: Tweaks
 Architecture: iphoneos-arm
-Version: 0.5~beta1
+Version: 0.5
 Description: cool improvements for the app switcher
 	Drag to reorder, show close buttons by default, make exited apps transparent, show active app
 	Maintained by Optimo
