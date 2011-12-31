@@ -559,18 +559,14 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 			}
 			// Update priority list in the switcher model
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
-			if (kCFCoreFoundationVersionNumber >= 675.00) {
-				// 5.0+
+			if (kCFCoreFoundationVersionNumber >= 550.52) {
+				// 4.2+
 				NSMutableArray *_recentDisplayIdentifiers = CHIvar(_model, _recentDisplayIdentifiers, NSMutableArray *);
 				NSString *displayIdentifier = [[_recentDisplayIdentifiers objectAtIndex:currentIndex] retain];
 				[_recentDisplayIdentifiers removeObjectAtIndex:currentIndex];
 				[_recentDisplayIdentifiers insertObject:displayIdentifier atIndex:destinationIndex];
 				[displayIdentifier release];
 				[_model _saveRecents];
-			} else if (kCFCoreFoundationVersionNumber >= 550.52) {
-				// 4.2+
-				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
-					[_model addToFront:[[appIcon application] displayIdentifier]];
 			} else {
 				// 4.0/4.1
 				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
