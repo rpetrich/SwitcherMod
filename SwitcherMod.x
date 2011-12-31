@@ -21,6 +21,8 @@
 - (void)_beginEditing;
 - (void)_stopEditing;
 - (void)_removeApplicationFromRecents:(SBApplication *)application;
+// iOS5.0+
+- (void)_saveRecents;
 @end
 
 @interface SBAppSwitcherBarView : UIView {
@@ -559,8 +561,12 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 			SBAppSwitcherModel *_model = CHIvar(self, _model, SBAppSwitcherModel *);
 			if (kCFCoreFoundationVersionNumber >= 675.00) {
 				// 5.0+
-				for (id iconView in [_appIcons reverseObjectEnumerator])
-					[_model addToFront:[[(SBApplicationIcon *)[iconView icon] application] displayIdentifier]];
+				NSMutableArray *_recentDisplayIdentifiers = CHIvar(_model, _recentDisplayIdentifiers, NSMutableArray *);
+				NSString *displayIdentifier = [[_recentDisplayIdentifiers objectAtIndex:currentIndex] retain];
+				[_recentDisplayIdentifiers removeObjectAtIndex:currentIndex];
+				[_recentDisplayIdentifiers insertObject:displayIdentifier atIndex:destinationIndex];
+				[displayIdentifier release];
+				[_model _saveRecents];
 			} else if (kCFCoreFoundationVersionNumber >= 550.52) {
 				// 4.2+
 				for (SBApplicationIcon *appIcon in [_appIcons reverseObjectEnumerator])
