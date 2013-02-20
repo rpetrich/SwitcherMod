@@ -282,6 +282,8 @@ static void LoadSettings()
 	[dict release];
 }
 
+%group Legacy
+
 static SBIcon *grabbedIcon;
 static NSUInteger grabbedIconIndex;
 
@@ -645,10 +647,47 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 
 %end
 
+%end
+
+
+@interface SBApplication (iOS6)
+- (BOOL)isRunning;
+@end
+
+%group iOS6
+
+%hook SBAppSwitcherController
+
+- (NSArray *)_bundleIdentifiersForViewDisplay
+{
+	%log();
+	NSArray *result = %orig();
+	if (SMExitedAppStyle != SMExitedAppStyleHidden)
+		return result;
+	NSMutableArray *newResult = [NSMutableArray array];
+	SBApplicationController *ac = [%c(SBApplicationController) sharedInstance];
+	for (NSString *displayIdentifier in result) {
+		if ([[ac applicationWithDisplayIdentifier:displayIdentifier] isRunning]) {
+			[newResult addObject:displayIdentifier];
+		}
+	}
+	return newResult;
+}
+
+%end
+
+%end
+
+
 %ctor
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	%init;
+	if (kCFCoreFoundationVersionNumber < 783.0) {
+		%init(Legacy);
+	} else {
+		%init(iOS6);
+	}
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void *)LoadSettings, CFSTR("com.collab.switchermod.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	LoadSettings();
 	[pool drain];
