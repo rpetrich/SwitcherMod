@@ -716,6 +716,7 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 	SBIconView *result = %orig();
 	SBApplication *app = [icon respondsToSelector:@selector(application)] ? [(SBApplicationIcon *)icon application] : nil;
 	result.alpha = (!app || [app isRunning]) ? 1.0f : SMExitedIconAlpha / 100;
+	[result setLabelHidden:SMIconLabelsOff];
 	return result;
 }
 
