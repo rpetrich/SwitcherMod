@@ -674,6 +674,42 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 	return newResult;
 }
 
+- (void)_beginEditing
+{
+	switch (SMCloseButtonStyle) {
+		case SMCloseButtonStyleRedMinus:
+		case SMCloseButtonStyleBlackClose:
+			break;
+		case SMCloseButtonStyleNone:
+			%orig();
+			break;
+	}
+}
+
+%end
+
+%hook SBAppSwitcherBarView
+
+- (void)_toggleIconViewEditingState:(SBIconView *)iconView animated:(BOOL)animated
+{
+	%orig();
+	switch (SMCloseButtonStyle) {
+		case SMCloseButtonStyleRedMinus:
+		case SMCloseButtonStyleBlackClose:
+			[iconView setShowsCloseBox:YES animated:animated];
+			break;
+	}
+}
+
+- (SBIconView *)_iconViewForIcon:(SBIcon *)icon creatingIfNecessary:(BOOL)necessary
+{
+	SBIconView *result = %orig();
+	SBApplication *app = [icon respondsToSelector:@selector(application)] ? [(SBApplicationIcon *)icon application] : nil;
+	result.alpha = (!app || [app isRunning]) ? 1.0f : SMExitedIconAlpha / 100;
+	return result;
+}
+
+
 %end
 
 %end
