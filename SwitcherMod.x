@@ -686,6 +686,16 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 	}
 }
 
+- (int)closeBoxTypeForIcon:(SBIcon *)icon
+{
+	%log();
+	int result = %orig();
+	if (SMCloseButtonStyle == SMCloseButtonStyleBlackClose) {
+		result = 0;
+	}
+	return result;
+}
+
 %end
 
 %hook SBAppSwitcherBarView
