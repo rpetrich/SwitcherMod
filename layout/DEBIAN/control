@@ -7,7 +7,7 @@ Description: cool improvements for the app switcher
 	Drag to reorder, show close buttons by default, make exited apps transparent, show active app
 	Maintained by Optimo
 Name: SwitcherMod
-Depends: firmware (>= 4.0), mobilesubstrate, preferenceloader (>= 2.0)
+Depends: firmware (>= 4), mobilesubstrate, preferenceloader (>= 2.1.1)
 Author: Optimo and rpetrich <switchermod@forios.com>
 Maintainer: BigBoss <bigboss@thebigboss.org>
 Website: http://moreinfo.thebigboss.org/moreinfo/depiction.php?file=switchermodData

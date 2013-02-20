@@ -28,6 +28,14 @@
 			<string>Show Current App</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
+			<key>pl_filter</key>
+			<dict>
+				<key>CoreFoundationVersion</key>
+				<array>
+					<integer>0</integer>
+					<integer>783</integer>
+				</array>
+			</dict>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -84,6 +92,14 @@
 			<string>No Wiggle Animation</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
+			<key>pl_filter</key>
+			<dict>
+				<key>CoreFoundationVersion</key>
+				<array>
+					<integer>0</integer>
+					<integer>783</integer>
+				</array>
+			</dict>
 		</dict>
         <dict>
 			<key>cell</key>
@@ -98,6 +114,14 @@
 			<string>Wiggle Fast Grabbing</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
+			<key>pl_filter</key>
+			<dict>
+				<key>CoreFoundationVersion</key>
+				<array>
+					<integer>0</integer>
+					<integer>783</integer>
+				</array>
+			</dict>
 		</dict>
         <dict>
 			<key>cell</key>
@@ -112,6 +136,14 @@
 			<string>Drag Up To Quit</string>
 			<key>PostNotification</key>
 			<string>com.collab.switchermod.settingschanged</string>
+			<key>pl_filter</key>
+			<dict>
+				<key>CoreFoundationVersion</key>
+				<array>
+					<integer>0</integer>
+					<integer>783</integer>
+				</array>
+			</dict>
 		</dict>
 		<dict>
 			<key>cell</key>
