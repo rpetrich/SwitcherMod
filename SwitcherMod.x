@@ -660,7 +660,6 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 
 - (NSArray *)_bundleIdentifiersForViewDisplay
 {
-	%log();
 	NSArray *result = %orig();
 	if (SMExitedAppStyle != SMExitedAppStyleHidden)
 		return result;
@@ -688,7 +687,6 @@ static NSInteger DestinationIndexForIcon(SBAppSwitcherBarView *bottomBar, SBAppl
 
 - (int)closeBoxTypeForIcon:(SBIcon *)icon
 {
-	%log();
 	int result = %orig();
 	if (SMCloseButtonStyle == SMCloseButtonStyleBlackClose) {
 		result = 0;
